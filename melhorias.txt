@@ -1,0 +1,3 @@
+1 - arquivos com menos de 20MB não vao quebrar, pq a iteração vai constar 0, ele vai entrar no loop, fazer verificação e sair.
+2 - na hora de enviar, escolher nome do arquivo caso tiver outro arquivo com o mesmo nome.
+3 - criar pastas como data/database/video_holder automaticamente ao iniciar
