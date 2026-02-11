@@ -60,8 +60,10 @@ pub async fn bot_on() {
 
         println!("1 > Baixar | 2 > Enviar");
 
-        io::stdin().read_line(&mut choice).expect("Não foi possivel ler input");
+        parser::build_database();
 
+        io::stdin().read_line(&mut choice).expect("Não foi possivel ler input");
+        
         if choice == "1\n" {
             
 
@@ -123,7 +125,7 @@ pub async fn bot_on() {
 
                 writeln!(file_data, "{}|{}|{}", path_file, file_data_blocks.get_initial_line(), file_data_blocks.get_total_lines()).expect("a");
 
-                std::fs::remove_dir_all(format!("{}-blocks_holder", path_file));
+               std::fs::remove_dir_all(format!("{}-blocks_holder", path_file)).expect("Erro ao tentar remover pasta");
             } else {
                 println!("Arquivo não encontrado, tente novamente");
             }
@@ -137,10 +139,12 @@ pub async fn bot_on() {
 
 
 pub fn bot_send_files(files_to_send: Vec<String>, bot: Bot, path_files: String, chat_id: ChatId, handlers: &mut Vec<JoinHandle<()>>) {
+    let mut idx = 0;
     for file in files_to_send {
-            let handler = thread_send_file(file, bot.clone(), path_files.clone(), chat_id);
+            let file_path_name = format!("{}_block_memory-{}", path_files.clone(), idx);
+            let handler = thread_send_file(file, bot.clone(), file_path_name, chat_id);
             handlers.push(handler);
-       
+        idx+=1;
     }       
 }
 
@@ -197,6 +201,8 @@ pub async fn get_file(bot: Bot, file_name: String, file_data: &mut FileData) {
 
     let names = file_data.clone().get_memory_blocks_names();
     let ids = file_data.clone().get_memory_blocks_ids();
+
+    std::fs::create_dir("./data").expect("Não foi possivel criar pasta data");
     
     for (idx, mut id) in ids.into_iter().enumerate() {
         id.pop().expect("abc");

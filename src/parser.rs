@@ -5,6 +5,8 @@ use std::fs::OpenOptions;
 
 use memmap2::MmapOptions;
 
+use crate::parser;
+
 #[derive(Clone)]
 pub struct MemoryBlock {
     ids: Vec<String>,
@@ -20,10 +22,6 @@ pub struct FileData {
 }
 
 impl FileData {
-    pub fn new(file_name: String, total_lines: String, memory_blocks: MemoryBlock, initial_line: String) -> Self {
-        Self { file_name: Some(file_name), total_lines: Some(total_lines), memory_blocks: Some(memory_blocks), initial_line: Some(initial_line)}
-    }
-
     pub fn set_file_name(&mut self, file_name: String) {
         self.file_name = Some(file_name)
     }
@@ -108,8 +106,8 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
             println!("> FILE WRITTEN");
         }
 
-        &file_data_block.set_file_name(path.to_string());
-        &file_data_block.set_total_lines(1);
+        file_data_block.set_file_name(path.to_string());
+        file_data_block.set_total_lines(1);
         return;
     }
 
@@ -146,8 +144,8 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
         idx += 1;
     }
 
-    &file_data_block.set_file_name(path.to_string());
-    &file_data_block.set_total_lines(loop_iterations);
+    file_data_block.set_file_name(path.to_string());
+    file_data_block.set_total_lines(loop_iterations);
 }
 
 
@@ -160,6 +158,17 @@ pub fn list_files(file_name: String) -> Vec<String> {
     return files_string;
 }
 
+pub fn delete_file_prefix() {
+    let _ = std::fs::read_dir("./data").expect("Não foi possivel ler pasta").for_each(|dir| 
+        {
+           let file_path = dir.expect("").path().into_os_string().into_string().unwrap();
+            
+           if file_path.contains("_block_memory") {
+                std::fs::remove_file(file_path).expect("Arquivo não encontrado");
+           }
+
+        });
+}
 
 pub fn get_file_blocks(file_name: String, file_data_blocks: &mut FileData) {
     let file = File::open("./database/data.index").expect("Não foi possivel abrir arquivo");
@@ -257,6 +266,8 @@ pub fn rebuild_blocks(file_data: &FileData) {
         
         index+=1;
     }
+
+    parser::delete_file_prefix();
 }
 
 
@@ -300,11 +311,25 @@ pub fn build_file_data(file_name: String, file_data: &mut FileData) {
 
         let values_vec = value.split('|').collect::<Vec<&str>>();
 
-        &file_data.set_file_name(values_vec[0].to_string());
-        &file_data.set_initial_line(values_vec[1].to_string());
-        &file_data.set_total_lines(values_vec[2].to_string().parse::<usize>().expect("abc"));
+        file_data.set_file_name(values_vec[0].to_string());
+        file_data.set_initial_line(values_vec[1].to_string());
+        file_data.set_total_lines(values_vec[2].to_string().parse::<usize>().expect("abc"));
         
     } else {
         println!("Arquivo não foi encontrado");
     }
 }
+
+pub fn build_database() {
+    let exist = std::fs::exists("./database").expect("Não foi possivel saber se a pasta existe");
+        
+        
+    if !exist {
+        std::fs::create_dir("./database").expect("Erro ao tentar criar pasta database");
+        
+        let _ = File::create("./database/data.block").expect("Não foi possivel criar data.block");
+        let _ = File::create("./database/data.index").expect("Não foi possivel criar data.index");
+
+    }
+}
+
