@@ -1,11 +1,13 @@
-mod bot;
+mod api;
+mod  bot;
 mod parser;
+mod tray;
 
 #[tokio::main]
 async fn main() -> () {
-//    parser::break_file();
-    bot::bot_on().await;
+   // bot::bot_on().await
+   // api::api_on().await
 
-    ()
+   tray::build();
 }
 

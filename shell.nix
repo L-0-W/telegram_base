@@ -8,6 +8,7 @@ pkgs.mkShell {
     cargo
     rustc
     openssl
+    glib
   ];
 
 }

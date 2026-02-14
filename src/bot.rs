@@ -1,20 +1,26 @@
-use futures::future::join_all;
 use teloxide::types::{FileId, InputFile};
-use teloxide::{prelude::*};
+use teloxide::{prelude::*, utils::command::BotCommands};
 use tokio::fs;
 use std::fs::OpenOptions;
-use std::io;
-use std::path::PathBuf;
+
 use std::io::Write;
 use tokio::task::JoinHandle;
 use tokio::time::Duration;
-use crate::parser::{self, FileData};
 use teloxide::net::Download;
+
+use crate::parser::{self, FileData};
 
 struct ChunkIterator {
     data: Vec<String>,
     position: usize,
     chunk_size: usize,
+}
+
+#[derive(BotCommands, Clone)]
+#[command(rename_rule = "lowercase", description = "Esses comandos são suportados")]
+enum Command {
+    #[command(description = "Cadastrar no telegram_base")]
+    Cadastrar,
 }
 
 impl ChunkIterator {
@@ -43,6 +49,8 @@ impl Iterator for ChunkIterator {
     }
 }
 
+
+
 pub async fn bot_on() {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(120)) // 2 minutos
@@ -53,105 +61,111 @@ pub async fn bot_on() {
     let chat_id = ChatId(5450426834);
 
 
-    loop {
+    teloxide::repl(bot, answer_command);
 
-        let mut choice = String::new();
-        let mut file_data_blocks = FileData::default();
+//     loop {
 
-        println!("1 > Baixar | 2 > Enviar");
+//         let mut choice = String::new();
+//         let mut file_data_blocks = FileData::default();
 
-        parser::build_database();
+//         println!("1 > Baixar | 2 > Enviar");
 
-        io::stdin().read_line(&mut choice).expect("Não foi possivel ler input");
+//         parser::build_database();
+
+//         io::stdin().read_line(&mut choice).expect("Não foi possivel ler input");
         
-        if choice == "1\n" {
+//         if choice == "1\n" {
             
 
-            let mut file_name = String::new();
-            println!("Digite o nome do arquivo que deseja baixar: ");
-            io::stdin().read_line(&mut file_name).expect("Não foi possivel ler input");
+//             let mut file_name = String::new();
+//             println!("Digite o nome do arquivo que deseja baixar: ");
+//             io::stdin().read_line(&mut file_name).expect("Não foi possivel ler input");
 
 
-            file_name.pop();
+//             file_name.pop();
 
-            crate::parser::build_file_data(file_name.clone(), &mut file_data_blocks);
-            crate::bot::get_file(bot.clone(), file_name, &mut file_data_blocks).await;
+//             crate::parser::build_file_data(file_name.clone(), &mut file_data_blocks);
+//             crate::bot::get_file(bot.clone(), file_name, &mut file_data_blocks).await;
 
-        }  else if choice == "2\n" {
+//         }  else if choice == "2\n" {
 
-            println!("Digite o arquivo que deseja enviar: ");
+//             println!("Digite o arquivo que deseja enviar: ");
 
-            let mut path_file = String::new();
+//             let mut path_file = String::new();
         
-            io::stdin().read_line(&mut path_file).expect("Não foi possivel ler");
+//             io::stdin().read_line(&mut path_file).expect("Não foi possivel ler");
 
-            path_file.pop();
+//             path_file.pop();
 
-            println!("Path: {:?}", path_file);
-            let path = PathBuf::from(format!("./video_holder/{}", path_file));
+//             println!("Path: {:?}", path_file);
+//             let path = PathBuf::from(format!("./video_holder/{}", path_file));
 
-            if path.exists() {
-                println!("Arquivo encontrado, separando e enviando....");
+//             if path.exists() {
+//                 println!("Arquivo encontrado, separando e enviando....");
 
-                parser::break_file(path_file.as_str(), &mut file_data_blocks);
+//                 parser::break_file(path_file.as_str(), &mut file_data_blocks);
         
-                let files_to_send = parser::list_files(path_file.clone());
+//                 let files_to_send = parser::list_files(path_file.clone());
                 
-                let mut chunk_iter = ChunkIterator::new(files_to_send, 50);
-                let mut batch_num = 1;
+//                 let mut chunk_iter = ChunkIterator::new(files_to_send, 50);
+//                 let mut batch_num = 1;
                 
-                while let Some(chunk) = chunk_iter.next() {
-                    println!("Batch {}: {} elementos (índices {} a {})", 
-                        batch_num,
-                        chunk.len(),
-                        (batch_num - 1) * 50,
-                        (batch_num - 1) * 50 + chunk.len() - 1
-                    );
+//                 while let Some(chunk) = chunk_iter.next() {
+//                     println!("Batch {}: {} elementos (índices {} a {})", 
+//                         batch_num,
+//                         chunk.len(),
+//                         (batch_num - 1) * 50,
+//                         (batch_num - 1) * 50 + chunk.len() - 1
+//                     );
                     
-                    let mut handlers: Vec<JoinHandle<()>> = Vec::new();
+//                     let mut handlers: Vec<JoinHandle<()>> = Vec::new();
                     
-                    bot_send_files(chunk, bot.clone(), path_file.clone(), chat_id, &mut handlers);
-                    join_all(handlers).await;  
+//                     bot_send_files(chunk, bot.clone(), chat_id, &mut handlers);
+//                     join_all(handlers).await;  
                     
-                    batch_num += 1;
-                }    
+//                     batch_num += 1;
+//                 }    
                 
-                let mut file_data = OpenOptions::new()
-                    .append(true)
-                    .open("./database/data.index").expect("Não foi possivel escreve em arquivo de ids");
+//                 let mut file_data = OpenOptions::new()
+//                     .append(true)
+//                     .open("./database/data.index").expect("Não foi possivel escreve em arquivo de ids");
                 
                 
-                file_data_blocks.set_initial_line(parser::get_next_index());
+//                 file_data_blocks.set_initial_line(parser::get_next_index());
 
-                writeln!(file_data, "{}|{}|{}", path_file, file_data_blocks.get_initial_line(), file_data_blocks.get_total_lines()).expect("a");
+//                 writeln!(file_data, "{}|{}|{}", path_file, file_data_blocks.get_initial_line(), file_data_blocks.get_total_lines()).expect("a");
 
-               std::fs::remove_dir_all(format!("{}-blocks_holder", path_file)).expect("Erro ao tentar remover pasta");
-            } else {
-                println!("Arquivo não encontrado, tente novamente");
-            }
+//                std::fs::remove_dir_all(format!("{}-blocks_holder", path_file)).expect("Erro ao tentar remover pasta");
+//             } else {
+//                 println!("Arquivo não encontrado, tente novamente");
+//             }
 
-        } else {
-            println!("Opção não e valida");
-        }
-}    
+//         } else {
+//             println!("Opção não e valida");
+//         }
+// }    
 
 }
 
+async fn answer_command(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
+    match cmd {
+        Command::Cadastrar => println!("A")
+    }
 
-pub fn bot_send_files(files_to_send: Vec<String>, bot: Bot, path_files: String, chat_id: ChatId, handlers: &mut Vec<JoinHandle<()>>) {
-    let mut idx = 0;
+    Ok(())
+}
+
+pub fn bot_send_files(files_to_send: Vec<String>, bot: Bot, chat_id: ChatId, handlers: &mut Vec<JoinHandle<()>>) {
     for file in files_to_send {
-            let file_path_name = format!("{}_block_memory-{}", path_files.clone(), idx);
-            let handler = thread_send_file(file, bot.clone(), file_path_name, chat_id);
+            let handler = thread_send_file(file, bot.clone(), chat_id);
             handlers.push(handler);
-        idx+=1;
     }       
 }
 
-pub fn thread_send_file(file: String, bot: Bot, path_files: String, chat_id: ChatId) -> JoinHandle<()> {
+pub fn thread_send_file(file: String, bot: Bot, chat_id: ChatId) -> JoinHandle<()> {
 
     let bot_thread = bot.clone();
-    let path_files_thread = path_files.clone();
+    let path_files_thread = file.clone().split("/").collect::<Vec<&str>>()[1].to_string();
     
     let handler = tokio::spawn(async move {              
         
@@ -202,7 +216,9 @@ pub async fn get_file(bot: Bot, file_name: String, file_data: &mut FileData) {
     let names = file_data.clone().get_memory_blocks_names();
     let ids = file_data.clone().get_memory_blocks_ids();
 
-    std::fs::create_dir("./data").expect("Não foi possivel criar pasta data");
+    if let Ok(false) = std::fs::exists("./data") {
+         std::fs::create_dir("./data").expect("Não foi possivel criar pasta data");
+    }
     
     for (idx, mut id) in ids.into_iter().enumerate() {
         id.pop().expect("abc");
