@@ -105,7 +105,7 @@ pub async fn bot_on(file_name: String, path_file: PathBuf, choice: u8) {
             
             file_data_blocks.set_initial_line(parser::get_next_index());
             
-            writeln!(file_data, "{}|{}|{}", file_name, file_data_blocks.get_initial_line(), file_data_blocks.get_total_lines()).expect("a");
+            writeln!(file_data, "{}|{}|{}", file_name.split_whitespace().collect::<String>(), file_data_blocks.get_initial_line(), file_data_blocks.get_total_lines()).expect("a");
             
             std::fs::remove_dir_all(format!("{}-blocks_holder", file_name)).expect("Erro ao tentar remover pasta");
         } else {

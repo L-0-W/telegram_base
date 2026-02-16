@@ -2,3 +2,4 @@
 2 - na hora de enviar, escolher nome do arquivo caso tiver outro arquivo com o mesmo nome.
 ✓ 3 - criar pastas como data/database/video_holder automaticamente ao iniciar
 4 - parece que ultimos bytes de arquivos grandes estão faltando, series com 51m acabam em 49:09, verificar conta matematica em break_files.
+5 - fazer  verificação para arquivos com espaço e na UI aparecer com espaços

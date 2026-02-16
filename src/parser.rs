@@ -93,7 +93,7 @@ pub fn break_file(file_name: &str, path: &str, file_data_block: &mut FileData)  
     let _ = create_dir(folder_name.as_str()).expect("Não foi possivel criar diretorio");
 
     if loop_iterations <= 0 {
-        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name, 0)) {
+        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name.split_whitespace().collect::<String>(), 0)) {
             println!("> FILE CREATED");
             
             let mut writter = BufWriter::with_capacity(1024 * 1024, new_file_block_memory);
@@ -104,6 +104,7 @@ pub fn break_file(file_name: &str, path: &str, file_data_block: &mut FileData)  
             println!("> FILE WRITTEN");
         }
 
+        println!("NAME FILE: {}", file_name.split_whitespace().collect::<String>());
         file_data_block.set_file_name(file_name.split_whitespace().collect::<String>());
         file_data_block.set_total_lines(1);
         return;
@@ -123,7 +124,7 @@ pub fn break_file(file_name: &str, path: &str, file_data_block: &mut FileData)  
 
         println!("Tamanho total bloco em MB: {}", memory_bloco.len() / 1_000_000);
 
-        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name, idx)) {
+        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name.split_whitespace().collect::<String>(), idx)) {
             println!("> FILE CREATED");
 
             let mut writter = BufWriter::with_capacity(1024 * 1024, new_file_block_memory);
@@ -142,7 +143,8 @@ pub fn break_file(file_name: &str, path: &str, file_data_block: &mut FileData)  
         idx += 1;
     }
 
-    file_data_block.set_file_name(file_name.to_string());
+     println!("NAME FILE: {}", file_name.split_whitespace().collect::<String>());
+    file_data_block.set_file_name(file_name.split_whitespace().collect::<String>());
     file_data_block.set_total_lines(loop_iterations);
 }
 
@@ -295,7 +297,7 @@ pub fn rebuild_blocks(file_data: &FileData) {
             break;
         }
 
-        let path = format!("./data/{}_block_memory-{}", file_data.get_name(), index);
+        let path = format!("./data/{}_block_memory-{}", file_data.get_name().split_whitespace().collect::<String>(), index);
         println!("file index: {}", path);
 
 

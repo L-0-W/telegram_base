@@ -70,18 +70,20 @@ pub async fn build(){
 
     let mut file_names_stored: Vec<FileName> = Vec::new();
 
-    for file_name in parser::get_stored_files() {
+    if std::fs::exists("./data/data.index").expect("Não foi possivel fazer pesquisa por pasta") {
+        for file_name in parser::get_stored_files() {
 
-        if file_name.is_empty() {
-            continue;
+            if file_name.is_empty() {
+                continue;
+            }
+
+            let filtered_str = parser::filter_long_string(file_name.clone());
+            let item_files = MenuItem::new(filtered_str, true, None);
+
+            file_names_stored.push(FileName { id: item_files.id().0.clone(), name: file_name });
+
+            submenu_items_download.append(&item_files).unwrap();
         }
-
-        let filtered_str = parser::filter_long_string(file_name.clone());
-        let item_files = MenuItem::new(filtered_str, true, None);
-
-        file_names_stored.push(FileName { id: item_files.id().0.clone(), name: file_name });
-
-        submenu_items_download.append(&item_files).unwrap();
     }
 
     let icon= load_image(Path::new("./res/images.png"));
