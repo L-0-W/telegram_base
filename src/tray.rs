@@ -124,6 +124,10 @@ pub async fn build(){
                 .set_directory("~")
                 .pick_files();     
                 
+                if files_option.is_none() {
+                    return;
+                }
+
                 let paths = files_option.expect("path bufs");
                 
                 for path in paths {
