@@ -3,11 +3,18 @@ name = "telegram_base"
 version = "0.1.0"
 edition = "2024"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18.2"
+
+
 [dependencies]
 axum = "0.8.8"
 futures = "0.3.31"
+image = "0.25.9"
 memmap2 = "0.9.9"
 reqwest = "0.12.28"
+rfd = "0.17.2"
+tao = "0.34.5"
 teloxide = { version = "0.17.0", features = ["macros"] }
 tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 tray-icon = "0.21.3"

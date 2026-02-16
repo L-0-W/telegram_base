@@ -66,8 +66,8 @@ impl FileData {
     }
 }
 
-pub fn break_file(path: &str, file_data_block: &mut FileData)  {
-    let file = File::open(format!("./video_holder/{}", path)).expect("Não foi possivel achar video");
+pub fn break_file(file_name: &str, path: &str, file_data_block: &mut FileData)  {
+    let file = File::open(path).expect("Não foi possivel achar video");
 
     let mmap = unsafe {
         MmapOptions::new()
@@ -87,15 +87,13 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
 
     let loop_iterations = original_file_size_in_mb / mb_10;
 
-
-
     println!("Numero de iterações: {}", loop_iterations);
 
-    let folder_name = format!("{}-blocks_holder", path);
+    let folder_name = format!("./{}-blocks_holder", file_name);
     let _ = create_dir(folder_name.as_str()).expect("Não foi possivel criar diretorio");
 
     if loop_iterations <= 0 {
-        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), path, 0)) {
+        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name, 0)) {
             println!("> FILE CREATED");
             
             let mut writter = BufWriter::with_capacity(1024 * 1024, new_file_block_memory);
@@ -106,7 +104,7 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
             println!("> FILE WRITTEN");
         }
 
-        file_data_block.set_file_name(path.to_string());
+        file_data_block.set_file_name(file_name.split_whitespace().collect::<String>());
         file_data_block.set_total_lines(1);
         return;
     }
@@ -125,7 +123,7 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
 
         println!("Tamanho total bloco em MB: {}", memory_bloco.len() / 1_000_000);
 
-        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), path, idx)) {
+        if let Ok(new_file_block_memory) = File::create_new(format!("{}/{}_block_memory-{}", folder_name.as_str(), file_name, idx)) {
             println!("> FILE CREATED");
 
             let mut writter = BufWriter::with_capacity(1024 * 1024, new_file_block_memory);
@@ -144,7 +142,7 @@ pub fn break_file(path: &str, file_data_block: &mut FileData)  {
         idx += 1;
     }
 
-    file_data_block.set_file_name(path.to_string());
+    file_data_block.set_file_name(file_name.to_string());
     file_data_block.set_total_lines(loop_iterations);
 }
 
@@ -170,6 +168,38 @@ pub fn delete_file_prefix() {
         });
 }
 
+pub fn filter_long_string(str: String) -> String {
+
+    if str.len() > 25 { 
+        let mut return_name = str
+            .chars()
+            .collect::<Vec<char>>()[0..25]
+            .iter().collect::<String>(); 
+        
+        return_name.push_str("...");
+        return_name 
+    } else { str }
+}
+
+pub fn get_stored_files() -> Vec<String> {
+    let file = File::open("./database/data.index").expect("Não foi possivel abrir arquivo");
+
+    let mmap = unsafe { 
+        MmapOptions::new().map(&file).expect("Não foi possivel carregar com mmap")
+    };
+
+
+    let index = String::from_utf8_lossy(&mmap);
+    
+    let value_vec = index.split('\n')
+        .collect::<Vec<&str>>()
+        .iter().map(|name| name.split("|").next().expect("").to_string())
+        .collect::<Vec<String>>();
+
+
+    value_vec
+}
+
 pub fn get_file_blocks(file_name: String, file_data_blocks: &mut FileData) {
     let file = File::open("./database/data.index").expect("Não foi possivel abrir arquivo");
 
@@ -177,6 +207,7 @@ pub fn get_file_blocks(file_name: String, file_data_blocks: &mut FileData) {
         MmapOptions::new().map(&file).expect("Não foi possivel carregar com mmap")
     };
 
+    println!("{}", file_name);
 
     let index = String::from_utf8_lossy(&mmap);
     let mut value_res = index.split('\n')
@@ -210,19 +241,28 @@ pub fn get_file_blocks(file_name: String, file_data_blocks: &mut FileData) {
 }
 
 
-pub fn get_blocks_id(offset: usize, size: usize) -> (Vec<String>, Vec<String>){
+pub fn get_blocks_id(mut offset: usize, size: usize) -> (Vec<String>, Vec<String>){
     let file = File::open("./database/data.block").expect("Não foi possivel abrir arquivo");
     let reader = BufReader::new(&file);
 
     let mut ids = Vec::new();
     let mut names = Vec::new();
 
-    for (idx, linha) in reader.lines().skip(offset).enumerate() {
-        if idx >= (size - offset) {
-            break;
-        }
+    offset = if offset > 0 { offset-1 } else { offset };
 
-        
+    for (idx, linha) in reader.lines().skip(offset).enumerate() {
+        println!("enter: {} - {} - {}", idx, offset, size);
+
+        if size < offset {
+            if idx > size {
+                break;
+            }
+        } else if size >= offset {
+            if idx > size {
+                break;
+            }
+        }
+            
         let linha_ok = linha.expect("a");
 
         println!("{} - {}", idx, linha_ok);
@@ -256,7 +296,7 @@ pub fn rebuild_blocks(file_data: &FileData) {
         }
 
         let path = format!("./data/{}_block_memory-{}", file_data.get_name(), index);
-        println!("{}", path);
+        println!("file index: {}", path);
 
 
         let file_bytes = std::fs::read(path).expect("teste");
@@ -276,7 +316,13 @@ pub fn get_next_index() -> String {
 
 
     if let Some(last_line) = content.lines().last() {
-        let next_index = last_line.split('|').collect::<Vec<&str>>()[2].parse::<u16>().expect("msg") + 1; 
+        let split_last_line = last_line.split('|').collect::<Vec<&str>>();
+        
+        let last_index = split_last_line[2].parse::<u16>().expect("msg");
+        let offset_of_last_index = split_last_line[1].parse::<u16>().expect("msg");
+
+        let next_index = last_index + offset_of_last_index;
+
 
         println!("Ultima linha: {}", next_index);
 

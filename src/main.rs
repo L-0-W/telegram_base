@@ -8,6 +8,6 @@ async fn main() -> () {
    // bot::bot_on().await
    // api::api_on().await
 
-   tray::build();
+   tray::build().await;
 }
 
