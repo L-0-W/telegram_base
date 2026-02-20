@@ -136,8 +136,13 @@ pub fn bot_send_files(files_to_send: Vec<String>, bot: Bot, chat_id: ChatId, han
 pub fn thread_send_file(file: String, bot: Bot, chat_id: ChatId) -> JoinHandle<()> {
 
     let bot_thread = bot.clone();
+
+    #[cfg(target_os = "linux")]
     let path_files_thread = file.clone().split("/").collect::<Vec<&str>>()[1].to_string();
     
+    #[cfg(target_os = "windows")]
+    let path_files_thread = file.clone().split("\"").collect::<Vec<&str>>()[1].to_string();
+
     let handler = tokio::spawn(async move {              
         
         println!("{}", file);
