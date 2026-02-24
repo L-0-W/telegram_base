@@ -86,7 +86,7 @@ pub async fn build(){
         }
     }
 
-    let icon= load_image(Path::new("./res/images.png"));
+    let icon= load_image(Path::new("/home/low/Desktop/telegram_base/res/images.png"));
         
     let _tt = TrayIconBuilder::new()
         .with_menu(Box::new(tray_menu))
