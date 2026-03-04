@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .menu-container {
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            display: none;
+        }
+
+        .menu-container.active {
+            display: block;
+        }
+
+        /* Login Screen */
+        .login-container {
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16162a 100%);
+            border-radius: 12px;
+            padding: 40px 24px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container.hidden {
+            display: none;
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+
+        .login-logo svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.9);
+            stroke-width: 1.5;
+        }
+
+        .login-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .login-error {
+            color: #ff6b6b;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 12px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .login-error.show {
+            opacity: 1;
+        }
+
+        /* Menu Styles */
+        .drag-area {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 24px 16px;
+            text-align: center;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .drag-area:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .drag-area.drag-over {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.6);
+            transform: scale(1.02);
+        }
+
+        .drag-area.drag-over .drag-icon {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .drag-area.drag-over .drag-text {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .drag-area.processing {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .drag-icon {
+            width: 24px;
+            height: 24px;
+            margin: 0 auto 8px;
+            opacity: 0.5;
+            transition: all 0.2s ease;
+        }
+
+        .drag-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.6);
+            stroke-width: 1.5;
+        }
+
+        .drag-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            transition: color 0.2s ease;
+        }
+
+        .menu-list {
+            list-style: none;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+        }
+
+        .menu-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.8);
+            stroke-width: 1.5;
+        }
+
+        .menu-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .menu-shortcut {
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 11px;
+            font-weight: 400;
+            font-family: "SF Mono", Monaco, monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 6px 0;
+        }
+
+        .menu-item-small {
+            padding: 6px 12px;
+        }
+
+        .menu-item-small .menu-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .menu-item-small:hover .menu-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .icon-file svg,
+        .icon-clipboard svg,
+        .icon-clock svg,
+        .icon-settings svg,
+        .icon-exit svg {
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* NOVA SEÇÃO DE ARQUIVOS - DESIGN MELHORADO */
+        .file-storage {
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .file-storage::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .file-storage::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 3px;
+        }
+
+        .file-storage::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .file-storage::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateX(2px);
+        }
+
+        .file-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .file-icon.image { background: rgba(99, 102, 241, 0.15); }
+        .file-icon.document { background: rgba(59, 130, 246, 0.15); }
+        .file-icon.video { background: rgba(236, 72, 153, 0.15); }
+        .file-icon.audio { background: rgba(168, 85, 247, 0.15); }
+        .file-icon.archive { background: rgba(245, 158, 11, 0.15); }
+        .file-icon.code { background: rgba(34, 197, 94, 0.15); }
+        .file-icon.default { background: rgba(255, 255, 255, 0.08); }
+
+        .file-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        .file-icon.image svg { stroke: #818cf8; }
+        .file-icon.document svg { stroke: #60a5fa; }
+        .file-icon.video svg { stroke: #f472b6; }
+        .file-icon.audio svg { stroke: #c084fc; }
+        .file-icon.archive svg { stroke: #fbbf24; }
+        .file-icon.code svg { stroke: #4ade80; }
+        .file-icon.default svg { stroke: rgba(255, 255, 255, 0.6); }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .file-size {
+            font-family: "SF Mono", Monaco, monospace;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .file-date {
+            position: relative;
+            padding-left: 8px;
+        }
+
+        .file-date::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .file-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .file-item:hover .file-actions {
+            opacity: 1;
+        }
+
+        .file-action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .file-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-action-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: rgba(255, 255, 255, 0.5);
+            stroke-width: 2;
+        }
+
+        .file-action-btn:hover svg {
+            stroke: rgba(255, 255, 255, 0.9);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            stroke: rgba(255, 255, 255, 0.1);
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            font-size: 13px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+        }
+
+        .file-count {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            font-family: "SF Mono", Monaco, monospace;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <h1 class="login-title">Datum</h1>
+        <p class="login-subtitle">Enter your credentials to continue</p>
+        <form class="login-form" onsubmit="return handleLogin(event)">
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="admin" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••">
+            </div>
+            <button type="submit" class="login-btn">Sign In</button>
+            <div class="login-error" id="loginError">Invalid credentials</div>
+        </form>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div class="menu-container" id="menuScreen">
+        <!-- Drag Area -->
+        <div class="drag-area" id="dragArea">
+            <div class="drag-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12l7-7 7 7"/>
+                </svg>
+            </div>
+            <div class="drag-text" id="dragText">Drag files here...</div>
+        </div>
+
+        <!-- Menu Items -->
+        <ul class="menu-list">
+            <li class="menu-item">
+                <div class="menu-item-left">
+                    <div class="menu-icon icon-file">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                        </svg>
+                    </div>
+                    <span class="menu-label">Select file</span>
+                </div>
+                <span class="menu-shortcut">⌘O</span>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-item-left">
+                    <div class="menu-icon icon-clipboard">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                    </div>
+                    <span class="menu-label">Upload from clipboard</span>
+                </div>
+                <span class="menu-shortcut">⌘⇧V</span>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-item-left">
+                    <div class="menu-icon icon-clock">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                    </div>
+                    <span class="menu-label">Recent uploads</span>
+                </div>
+                <span class="menu-shortcut">⌘Y</span>
+            </li>
+
+            <li class="separator"></li>
+
+            <li class="menu-item">
+                <div class="menu-item-left">
+                    <div class="menu-icon icon-settings">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </div>
+                    <span class="menu-label">Settings</span>
+                </div>
+                <span class="menu-shortcut">⌘,</span>
+            </li>
+
+            <li class="menu-item" onclick="logout()">
+                <div class="menu-item-left">
+                    <div class="menu-icon icon-exit">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16,17 21,12 16,7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </div>
+                    <span class="menu-label">Quit</span>
+                </div>
+                <span class="menu-shortcut">⌘Q</span>
+            </li>
+
+            <li class="separator"></li>
+
+            <!-- Seção de Arquivos Melhorada -->
+            <li class="menu-item" style="display: block; padding: 0; cursor: default;">
+                <div class="section-header">
+                    <span class="section-title">Recent Files</span>
+                    <span class="file-count" id="fileCount">0 files</span>
+                </div>
+                <div id="file-holder" class="file-storage">
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                        </svg>
+                        <div class="empty-text">No files uploaded yet</div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        const invoke_rust = window.__TAURI__.core.invoke;
+        const StoreClass = window.__TAURI__.store;        
+        const { listen } = window.__TAURI__.event;
+
+        // Estado global para controle de listeners e processamento
+        let unlistenDragDrop = null;
+        let isSettingUpListener = false;
+        let isProcessing = false;
+        
+        // CRÍTICO: Conjunto para rastrear IDs de eventos já processados (fix para bug do Tauri v2)
+        const processedEventIds = new Set();
+        const EVENT_ID_TIMEOUT = 5000; // Limpar IDs após 5 segundos
+        
+        // Elementos DOM
+        const dragArea = document.getElementById('dragArea');
+        const dragText = document.getElementById('dragText');
+
+        // Descomentar as linhas abaixo para pular login durante desenvolvimento
+        // document.getElementById('loginScreen').classList.add('hidden');
+        // document.getElementById('menuScreen').classList.add('active');
+
+        /**
+         * Limpa IDs antigos do conjunto para evitar memory leak
+         */
+        function cleanupOldEventIds() {
+            // Manter apenas os últimos 100 IDs (implementação simples de LRU)
+            if (processedEventIds.size > 100) {
+                const idsArray = Array.from(processedEventIds);
+                const toRemove = idsArray.slice(0, idsArray.length - 50);
+                toRemove.forEach(id => processedEventIds.delete(id));
+                console.log(`Limpados ${toRemove.length} IDs antigos de eventos`);
+            }
+        }
+
+        /**
+         * Configura o listener de drag-and-drop do Tauri
+         * Previne múltiplos registros usando flags de estado e deduplicação por ID
+         */
+        async function setupDragDropListener() {
+            console.log('=== TENTANDO REGISTRAR LISTENER ===');
+            
+            // Verificação dupla para evitar race conditions
+            if (unlistenDragDrop) {
+                console.log('Listener já existe (unlistenDragDrop !== null), ignorando');
+                return;
+            }
+            
+            if (isSettingUpListener) {
+                console.log('Setup já em progresso (isSettingUpListener === true), ignorando');
+                return;
+            }
+            
+            isSettingUpListener = true;
+            
+            try {
+                unlistenDragDrop = await listen('tauri://drag-drop', async (event) => {
+                    // CRÍTICO: Deduplicação por ID do evento (fix para bug do Tauri v2)
+                    // O Tauri v2 dispara o evento duas vezes com IDs diferentes para o mesmo drop
+                    const eventId = event.id;
+                    
+                    console.log(`\n=== EVENTO TAURI DRAG-DROP RECEBIDO ===`);
+                    console.log(`Event ID: ${eventId}`);
+                    console.log(`Timestamp: ${Date.now()}`);
+                    
+                    // Verificar se este ID já foi processado
+                    // if (processedEventIds.has(eventId)) {
+                    //     console.log(`🚫 Evento ID ${eventId} já foi processado, ignorando (duplicata)`);
+                    //     return;
+                    // }
+                    
+                    // Marcar ID como processado imediatamente
+                    processedEventIds.add(eventId);
+                    console.log(`✓ Evento ID ${eventId} marcado como processado`);
+                    
+                    // Limpar IDs antigos periodicamente
+                    cleanupOldEventIds();
+                    
+                    // Verificar se já está processando outro evento
+                    if (isProcessing) {
+                        console.log('Já processando arquivo anterior, ignorando evento');
+                        return;
+                    }
+
+                    const rect = dragArea.getBoundingClientRect();
+                    const dropX = event.payload.position.x;
+                    const dropY = event.payload.position.y;
+                    
+                    // Verificar se o drop foi dentro da dragArea
+                    const isInsideDragArea = (
+                        dropX >= rect.left && 
+                        dropX <= rect.right && 
+                        dropY >= rect.top && 
+                        dropY <= rect.bottom
+                    );
+
+                    console.log(`Posição do drop: X=${dropX}, Y=${dropY}`);
+                    console.log(`Dentro da área: ${isInsideDragArea}`);
+
+                    if (!isInsideDragArea) {
+                        console.log('Drop fora da área de drag, ignorando');
+                        return;
+                    }
+
+                    const paths = event.payload.paths;
+                    if (!paths || paths.length === 0) {
+                        console.log('Nenhum arquivo no payload do evento');
+                        return;
+                    }
+
+                    // Marcar início do processamento
+                    isProcessing = true;
+                    dragArea.classList.add('processing');
+                    dragText.textContent = `Processing ${paths.length} file(s)...`;
+                    
+                    console.log(`\n=== INICIANDO PROCESSAMENTO DE ${paths.length} ARQUIVO(S) ===\n`);
+
+                    // Processar todos os arquivos
+                    for (let i = 0; i < paths.length; i++) {
+                        const filePath = paths[i];
+                        const pathParts = filePath.split(/[\\/]/);
+                        const fileName = pathParts[pathParts.length - 1];
+                        
+                        console.log(`\n--- Arquivo ${i + 1}/${paths.length} ---`);
+                        console.log(`Nome: ${fileName}`);
+                        
+                        try {
+                            let jwt = await store.get("user-jwt");
+                            await invoke_rust('handle_drop', { fileName: fileName, filePath: filePath, id: eventId, jwt: jwt });
+                            console.log(`✓ Comando 'abc' executado com sucesso para: ${fileName}`);
+                        } catch (error) {
+                            console.error(`✗ Erro ao chamar Rust:`, error);
+                        }
+                    }
+
+                    console.log('\n=== PROCESSAMENTO CONCLUÍDO ===\n');
+                    
+                    // Resetar estado após delay
+                    setTimeout(() => {
+                        isProcessing = false;
+                        dragArea.classList.remove('processing');
+                        dragText.textContent = 'Drag files here...';
+                        console.log('Pronto para novos arquivos');
+                    }, 1000);
+                });
+                
+                console.log('✓ Listener de drag-drop registrado com sucesso');
+            } catch (error) {
+                console.error('✗ Erro ao registrar listener:', error);
+            } finally {
+                isSettingUpListener = false;
+            }
+        }
+
+        // Feedback visual durante drag (apenas CSS, sem conflito com Tauri)
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dragArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isProcessing) {
+                    dragArea.classList.add('drag-over');
+                }
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dragArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (eventName === 'dragleave' && dragArea.contains(e.relatedTarget)) {
+                    return;
+                }
+                dragArea.classList.remove('drag-over');
+            }, false);
+        });
+
+        // Prevenir comportamento padrão no documento inteiro
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        // Ícones de arquivo por tipo
+        const fileIcons = {
+            image: `<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>`,
+            document: `<svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+            video: `<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="2.18"/><polygon points="10,8 16,12 10,16 10,8"/></svg>`,
+            audio: `<svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+            archive: `<svg viewBox="0 0 24 24" fill="none"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>`,
+            code: `<svg viewBox="0 0 24 24" fill="none"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>`,
+            default: `<svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>`
+        };
+
+        /**
+         * Determina o tipo de arquivo baseado na extensão
+         */
+        function getFileType(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const types = {
+                image: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'],
+                document: ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'],
+                video: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'],
+                audio: ['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a'],
+                archive: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2'],
+                code: ['js', 'html', 'css', 'py', 'java', 'cpp', 'c', 'h', 'json', 'xml', 'md']
+            };
+            
+            for (const [type, exts] of Object.entries(types)) {
+                if (exts.includes(ext)) return type;
+            }
+            return 'default';
+        }
+
+        /**
+         * Formata o tamanho do arquivo para exibição
+         */
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        /**
+         * Formata a data relativa (ex: "2h ago")
+         */
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = (now - date) / 1000;
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+            
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        /**
+         * Carrega a lista de arquivos do servidor
+         */
+        async function list_files(jwt) {
+            try {
+                const res = await invoke_rust('get_files', { jwt: jwt });
+                const file_holder = document.getElementById("file-holder");
+                const fileCount = document.getElementById("fileCount");
+                const emptyState = document.getElementById("emptyState");
+
+                // Limpar lista atual (exceto empty state se existir)
+                const existingFiles = file_holder.querySelectorAll('.file-item');
+                existingFiles.forEach(el => el.remove());
+
+                if (res && res.length > 0) {
+                    // Remove empty state
+                    if (emptyState) emptyState.style.display = 'none';
+                    
+                    // Atualizar contador
+                    fileCount.textContent = `${res.length} file${res.length !== 1 ? 's' : ''}`;
+                    
+                    res.forEach((file) => {
+                        const fileType = getFileType(file.fileName);
+                        const fileSize = formatFileSize(file.originalSize || 0);
+                        const fileDate = formatDate(file.uploadDate);
+                        
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <div class="file-item-left">
+                                <div class="file-icon ${fileType}">
+                                    ${fileIcons[fileType]}
+                                </div>
+                                <div class="file-info">
+                                    <div class="file-name" title="${file.fileName}">${file.fileName}</div>
+                                    <div class="file-meta">
+                                        <span class="file-size">${fileSize}</span>
+                                        ${fileDate ? `<span class="file-date">${fileDate}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="file-action-btn" title="Copy link" onclick="copyLink('${file.id}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                    </svg>
+                                </button>
+                                <button class="file-action-btn" title="Download" onclick="downloadFile('${file.id}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7,10 12,15 17,10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </button>
+                                <button class="file-action-btn" title="Delete" onclick="deleteFile('${file.id}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="3,6 5,6 21,6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        `;
+                        
+                        file_holder.appendChild(fileItem);
+                    });
+                } else {
+                    fileCount.textContent = '0 files';
+                    if (emptyState) emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar arquivos:', error);
+            }
+        }
+        
+        /**
+         * Tenta login automático com JWT salvo
+         */
+        async function try_login_jwt() {
+            try {
+                const store = await StoreClass.Store.load('cred.json', { autoSave: false });
+                let jwt = await store.get("user-jwt");
+
+                if (jwt != undefined) {
+                    const res = await invoke_rust('login_jwt', { jwt: jwt });
+                    console.log('Resposta login_jwt:', res);
+
+                    if (res) {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('menuScreen').classList.add('active');
+                        
+                        await list_files(jwt);
+                        await setupDragDropListener();
+                    } else {
+                        await store.delete('user-jwt');
+                        await store.save();
+
+                        document.getElementById('loginScreen').classList.remove('hidden');
+                        document.getElementById('menuScreen').classList.remove('active');
+                    }
+                } else {
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('menuScreen').classList.remove('active');
+                }
+            } catch (e) {
+                console.error("Erro no try_login_jwt: ", e);
+                document.getElementById('loginScreen').classList.remove('hidden');
+            }
+        }
+        
+        /**
+         * Handler do formulário de login
+         */
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('loginError');
+
+            try {
+                const login_valid = await invoke_rust('login', { email: username, password: password });
+                console.log('Resposta login:', login_valid);
+
+                if (login_valid != null) {
+                    const store = await StoreClass.Store.load('cred.json', { autoSave: false });
+                    await store.set('user-jwt', login_valid);
+                    await store.save();
+
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('menuScreen').classList.add('active');
+                    errorMsg.classList.remove('show');
+
+                    await list_files(login_valid);
+                    await setupDragDropListener();
+                } else {
+                    errorMsg.classList.add('show');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                errorMsg.classList.add('show');
+            }
+
+            return false;
+        }
+
+        /**
+         * Logout do usuário
+         */
+        async function logout() {
+            try {
+                const store = await StoreClass.Store.load('cred.json', { autoSave: false });
+                await store.delete('user-jwt');
+                await store.save();
+
+                // Limpar eventos processados ao fazer logout
+                processedEventIds.clear();
+
+                // Remover listener de drag-drop ao fazer logout
+                if (unlistenDragDrop) {
+                    unlistenDragDrop();
+                    unlistenDragDrop = null;
+                    console.log('Listener de drag-drop removido');
+                }
+
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('menuScreen').classList.remove('active');
+                document.getElementById('loginError').classList.remove('show');
+            } catch (error) {
+                console.error('Erro no logout:', error);
+            }
+        }
+
+        // Funções placeholder para ações dos arquivos
+        function copyLink(fileId) {
+            console.log('Copy link:', fileId);
+        }
+
+        function downloadFile(fileId) {
+            console.log('Download:', fileId);
+        }
+
+        function deleteFile(fileId) {
+            console.log('Delete:', fileId);
+        }
+    
+        // Inicialização
+        window.addEventListener('load', () => {
+            console.log("=== APLICAÇÃO INICIADA ===");
+            try_login_jwt();
+        });
+    </script>
+</body>
+</html>
