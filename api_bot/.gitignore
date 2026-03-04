@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.lucia/
+.next/
+dist/
+dist-ssr/
+out/
+*.tgz
+*.local
+
+# Environment
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+
+# Databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+sqlite.db
+
+# Logs and Coverage
+*.log
+logs/
+coverage/
+*.lcov
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# Drizzle Kit
+.drizzle/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Project specific
+backend/sqlite.db
+backend/.env
+painel-app/dist/
+user-app/dist/
